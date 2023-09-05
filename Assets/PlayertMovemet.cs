@@ -1,46 +1,69 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
-public class PlayertMovemet : MonoBehaviour {
-
-    #region Variables
+public class PlayerMovement : MonoBehaviour
+{
     public CharacterController controller;
-
     public float speed = 12f;
     public float gravity = 9.81f;
     public float jumpHeight = 3f;
-
     public Transform groundCheck;
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
+    public Text deathCountText;
 
-    Vector3 Velocity;
-    bool isGrounded;
-#endregion
+    private Vector3 velocity;
+    private bool isGrounded;
+    private int deathCount = 0;
+    private Vector3 spawnPosition = new Vector3(9.358128f, 3.96f, 1.979087f);
 
-    #region Unity Methods
     void Update()
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
-        if(isGrounded && Velocity.y < 0)
-		{
-            Velocity.y = -2f;
-		}
+        if (isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
         Vector3 move = transform.right * x + transform.forward * z;
 
-        controller.Move(move * speed *Time.deltaTime);
+        controller.Move(move * speed * Time.deltaTime);
 
-        if(Input.GetButtonDown("Jump") && isGrounded)
-		{
-            Velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-		}
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
 
-        Velocity.y += gravity * Time.deltaTime;
+        velocity.y += gravity * Time.deltaTime;
 
-        controller.Move(Velocity * Time.deltaTime);
+        controller.Move(velocity * Time.deltaTime);
     }
-      #endregion
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("DangerousCube"))
+        {
+            Die();
+        }
+    }
+
+    public void Die()
+    {
+        deathCount++;
+        Debug.Log("Player has died! Death Count: " + deathCount);
+        deathCountText.text = "Deaths: " + deathCount.ToString();
+
+        controller.enabled = false;
+        transform.position = spawnPosition;
+        controller.enabled = true;
+    }
+
+    public void SetSpawnPosition(Vector3 position)
+    {
+        spawnPosition = position;
+    }
 }
